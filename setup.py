@@ -7,6 +7,6 @@ setup(name='sznqalibs',
       author='Seznam.cz, a.s.',
       author_email='opensource@firma.seznam.cz',
       url='https://github.com/seznam/szn-qalibs',
-      packages=['sznqalibs',],
+      packages=['sznqalibs', ],
       test_suite="tests",
       )
