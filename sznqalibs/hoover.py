@@ -828,9 +828,9 @@ class Tracker(dict):
 
     Best used as a result bearer from `regression_test`, this class keeps
     a simple in-memory "database" of errors seen during the regression
-    test, and methods for interface.
+    test, and implements few methods to access the data.
 
-    The basic useage is:
+    The basic usage is:
 
          1. Instantiate (no parameters)
 
@@ -964,7 +964,7 @@ class Tracker(dict):
             self._insert(errstr, argset)
 
     def write_stats_csv(self, fname):
-        """Write write stats to a simple one row (plus header) CSV."""
+        """Write stats to a simple one row (plus header) CSV."""
         stats = self.getstats()
         colnames = sorted(stats.keys())
         with open(fname, 'a') as fh:
