@@ -220,7 +220,27 @@ class RuleOp():
 class DictPath():
     """Mixin that adds "path-like" behavior to the top dict of dicts.
 
-    See TinyCase for description"""
+    Use this class as a mixin for a deep dic-like structure and you can access
+    the elements using a path.  For example:
+
+        MyData(dict, DictPath):
+            pass
+
+        d = MyData({
+            'name': 'Joe',
+            'age': 34,
+            'ssn': {
+                'number': '012 345 678',
+                'expires': '10-01-16',
+            },
+        })
+
+        print ("%s's ssn number %s will expire on %s"
+                % (d.getpath('/name'),
+                   d.getpath('/ssn/number'),
+                   d.getpath('/ssn/expiry')))
+        # joe's ssn number 012 345 678 will expire 10-01-16
+    """
 
     DIV = "/"
 
