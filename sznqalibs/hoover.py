@@ -113,6 +113,7 @@ def regression_test(argsrc, tests, driver_settings, cleanup_hack=None,
                 # do not clutter up the report
                 if not match_op == operator.eq:
                     case.hack(cleanup_hack)
+                    # but panic if that "removed" the error condition
                     if match_op(case['oracle'], case['result']):
                         raise RuntimeError("cleanup ate error")
 
