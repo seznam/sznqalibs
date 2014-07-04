@@ -12,9 +12,9 @@ import time
 from copy import deepcopy
 
 
-###############################################################################
-## The Motor                                                                 ##
-###############################################################################
+# ########################################################################### #
+# ## The Motor                                                             ## #
+# ########################################################################### #
 
 def regression_test(argsrc, tests, driver_settings, cleanup_hack=None,
                     apply_hacks=None, on_next=None):
@@ -69,7 +69,7 @@ def regression_test(argsrc, tests, driver_settings, cleanup_hack=None,
         on_next(argset, last_argset)
         counter.add('on_next', time.time() - on_start)
 
-        ## load the data first, only once for each driver
+        # # load the data first, only once for each driver
         #
         data = {}
         for aclass in all_classes:
@@ -113,6 +113,7 @@ def regression_test(argsrc, tests, driver_settings, cleanup_hack=None,
                 # do not clutter up the report
                 if not match_op == operator.eq:
                     case.hack(cleanup_hack)
+                    # but panic if that "removed" the error condition
                     if match_op(case['oracle'], case['result']):
                         raise RuntimeError("cleanup ate error")
 
@@ -151,9 +152,9 @@ def get_data(driverClass, argset, driver_settings):
     return d.data
 
 
-###############################################################################
-## The Pattern                                                               ##
-###############################################################################
+# ########################################################################### #
+# ## The Pattern                                                           ## #
+# ########################################################################### #
 
 class _BaseRuleOp():
 
@@ -213,14 +214,34 @@ class RuleOp():
         return bool(op(items, item_ok))
 
 
-###############################################################################
-## The Path                                                                  ##
-###############################################################################
+# ########################################################################### #
+# ## The Path                                                              ## #
+# ########################################################################### #
 
 class DictPath():
     """Mixin that adds "path-like" behavior to the top dict of dicts.
 
-    See TinyCase for description"""
+    Use this class as a mixin for a deep dic-like structure and you can access
+    the elements using a path.  For example:
+
+        MyData(dict, DictPath):
+            pass
+
+        d = MyData({
+            'name': 'Joe',
+            'age': 34,
+            'ssn': {
+                'number': '012 345 678',
+                'expires': '10-01-16',
+            },
+        })
+
+        print ("%s's ssn number %s will expire on %s"
+                % (d.getpath('/name'),
+                   d.getpath('/ssn/number'),
+                   d.getpath('/ssn/expiry')))
+        # joe's ssn number 012 345 678 will expire 10-01-16
+    """
 
     DIV = "/"
 
@@ -275,7 +296,7 @@ class DictPath():
             subdct = dct[frag]
             return cls.__delitem(subdct, rest)
 
-    ## public methods
+    # # public methods
     #
 
     def getpath(self, path):
@@ -304,9 +325,9 @@ class DictPath():
             return False
 
 
-###############################################################################
-## The Case                                                                  ##
-###############################################################################
+# ########################################################################### #
+# ## The Case                                                              ## #
+# ########################################################################### #
 
 class TinyCase(dict, DictPath):
     """Abstraction of the smallest unit of testing.
@@ -480,9 +501,9 @@ class TinyCase(dict, DictPath):
         return matched
 
 
-###############################################################################
-## Drivers                                                                   ##
-###############################################################################
+# ########################################################################### #
+# ## Drivers                                                               ## #
+# ########################################################################### #
 
 class DriverError(Exception):
     """Error encountered when obtaining driver data"""
@@ -705,9 +726,9 @@ class MockDriverTrue(BaseTestDriver):
         self.data = True
 
 
-###############################################################################
-## Helpers                                                                   ##
-###############################################################################
+# ########################################################################### #
+# ## Helpers                                                               ## #
+# ########################################################################### #
 
 class StatCounter(object):
     """A simple counter with formulas support."""
@@ -728,18 +749,16 @@ class StatCounter(object):
         }
 
         ##
-        ## Formulas.  A lot of them.
-        ##
-
-        ## cumulative duration/overhead; just round to ms
+        # Formulas
         #
+
+        # cumulative duration/overhead; just round to ms
         self.add_formula(dname + '_overhead',
                          lambda g, d: int(1000 * d[dname]['overhead']))
         self.add_formula(dname + '_duration',
                          lambda g, d: int(1000 * d[dname]['duration']))
 
-        ## average (per driver call) overhead/duration
-        #
+        # average (per driver call) overhead/duration
         self.add_formula(
             dname + '_overhead_per_call',
             lambda g, d: int(1000 * d[dname]['overhead'] / d[dname]['calls'])
@@ -749,8 +768,6 @@ class StatCounter(object):
             lambda g, d: int(1000 * d[dname]['duration'] / d[dname]['calls'])
         )
 
-        ## grand totals in times: driver time, loop overhead
-        #
         def gtotal_drivertime(g, d):
             driver_time = (sum(s['overhead'] for s in d.values())
                            + sum(s['duration'] for s in d.values()))
@@ -762,13 +779,13 @@ class StatCounter(object):
             age = int(1000 * (time.time() - self._born))
             return age - driver_time - onnext_time
 
+        # grand totals in times: driver time, loop overhead
         self.add_formula('gtotal_drivertime', gtotal_drivertime)
         self.add_formula('gtotal_loop_overhead', gtotal_loop_overhead)
         self.add_formula('gtotal_loop_onnext',
                          lambda g, d: int(1000 * g['on_next']))
 
-        ## average (per driver call) overhead/duration
-        #
+        # average (per driver call) overhead/duration
         self.add_formula(
             'cases_hacked',
             lambda g, d: round(100 * float(g['hacked_cases']) / g['cases'], 2)
@@ -828,9 +845,9 @@ class Tracker(dict):
 
     Best used as a result bearer from `regression_test`, this class keeps
     a simple in-memory "database" of errors seen during the regression
-    test, and methods for interface.
+    test, and implements few methods to access the data.
 
-    The basic useage is:
+    The basic usage is:
 
          1. Instantiate (no parameters)
 
@@ -884,7 +901,7 @@ class Tracker(dict):
 
     def _insert(self, errstr, argset):
         """Insert the argset into DB."""
-        if not errstr in self._db:
+        if errstr not in self._db:
             self._db[errstr] = []
         self._db[errstr].append(argset)
 
@@ -964,7 +981,7 @@ class Tracker(dict):
             self._insert(errstr, argset)
 
     def write_stats_csv(self, fname):
-        """Write write stats to a simple one row (plus header) CSV."""
+        """Write stats to a simple one row (plus header) CSV."""
         stats = self.getstats()
         colnames = sorted(stats.keys())
         with open(fname, 'a') as fh:
@@ -996,11 +1013,6 @@ class Tracker(dict):
                 for argset in self._db[errstr]:
                     cw.writerow(argset)
 
-
-## ............................................................................
-## dataMatch -- a data structure matcher
-##
-#
 
 def dataMatch(pattern, data, rmax=10, _r=0):
     """Check if data structure matches a pattern data structure.
@@ -1215,11 +1227,6 @@ def jsDiff(dira, dirb, namea="A", nameb="B", chara="a", charb="b"):
 
     return "\n".join(compress([line for line in udiff]))
 
-
-#
-## Cartman - create dict arguments from dicts of available values (iterables)
-#            and a defined scheme
-#
 
 class Cartman(object):
     """Create argument sets from ranges (or ay iterators) of values.
